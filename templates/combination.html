@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CV - {{ personal.name }}</title>
+    <style>
+        /* Import Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #2d3748;
+            background: white;
+        }
+        
+        /* Page setup for print */
+        @page {
+            size: A4;
+            margin: 0.5in;
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 18pt;
+            padding-bottom: 12pt;
+            border-bottom: 2pt solid #7c3aed;
+        }
+        
+        .name {
+            font-size: 21pt;
+            font-weight: 700;
+            color: #581c87;
+            margin-bottom: 6pt;
+        }
+        
+        .contact-info {
+            font-size: 10pt;
+            color: #6b46c1;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10pt;
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 4pt;
+        }
+        
+        /* Sections */
+        .section {
+            margin-bottom: 14pt;
+            page-break-inside: avoid;
+        }
+        
+        .section-title {
+            font-size: 12pt;
+            font-weight: 600;
+            color: #581c87;
+            border-bottom: 1pt solid #e9d5ff;
+            padding-bottom: 3pt;
+            margin-bottom: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5pt;
+        }
+        
+        /* Professional Summary - Strong and detailed */
+        .summary {
+            font-size: 10pt;
+            line-height: 1.4;
+            color: #6b46c1;
+            text-align: justify;
+            margin-bottom: 10pt;
+            padding: 10pt;
+            background-color: #faf5ff;
+            border-left: 3pt solid #7c3aed;
+        }
+        
+        /* Core Skills - Prominent at top */
+        .core-skills-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12pt;
+            margin-bottom: 14pt;
+            background-color: #faf5ff;
+            padding: 12pt;
+            border-radius: 6pt;
+        }
+        
+        .core-skill-category {
+            text-align: center;
+        }
+        
+        .core-skill-title {
+            font-weight: 600;
+            font-size: 11pt;
+            color: #581c87;
+            margin-bottom: 6pt;
+            text-transform: uppercase;
+            letter-spacing: 0.3pt;
+        }
+        
+        .core-skill-list {
+            font-size: 9pt;
+            color: #6b46c1;
+            line-height: 1.3;
+        }
+        
+        /* Experience - Balanced with skills */
+        .experience-item {
+            margin-bottom: 12pt;
+            border-left: 2pt solid #7c3aed;
+            padding-left: 10pt;
+        }
+        
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 5pt;
+        }
+        
+        .job-title {
+            font-weight: 600;
+            font-size: 11pt;
+            color: #581c87;
+        }
+        
+        .company {
+            font-weight: 500;
+            color: #7c3aed;
+            font-size: 10pt;
+        }
+        
+        .job-dates {
+            font-size: 9pt;
+            color: #6b46c1;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+        
+        .job-location {
+            font-size: 9pt;
+            color: #6b46c1;
+            font-style: italic;
+            margin-bottom: 6pt;
+        }
+        
+        .job-description {
+            font-size: 10pt;
+            line-height: 1.4;
+            color: #6b46c1;
+            margin-bottom: 5pt;
+        }
+        
+        .achievements {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .achievements li {
+            font-size: 9pt;
+            line-height: 1.3;
+            color: #6b46c1;
+            margin-bottom: 2pt;
+            position: relative;
+            padding-left: 12pt;
+        }
+        
+        .achievements li:before {
+            content: "•";
+            color: #7c3aed;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+        
+        /* Projects - Balanced prominence */
+        .project-item {
+            margin-bottom: 10pt;
+            background-color: #faf5ff;
+            padding: 8pt;
+            border-radius: 4pt;
+            border-left: 2pt solid #7c3aed;
+        }
+        
+        .project-name {
+            font-weight: 600;
+            font-size: 11pt;
+            color: #581c87;
+            margin-bottom: 3pt;
+        }
+        
+        .project-tech {
+            font-size: 9pt;
+            color: #6b46c1;
+            font-style: italic;
+            margin: 2pt 0 4pt 0;
+        }
+        
+        .project-description {
+            font-size: 10pt;
+            line-height: 1.3;
+            color: #6b46c1;
+        }
+        
+        /* Education - Standard prominence */
+        .education-item {
+            margin-bottom: 10pt;
+        }
+        
+        .degree {
+            font-weight: 600;
+            font-size: 11pt;
+            color: #581c87;
+        }
+        
+        .institution {
+            font-weight: 500;
+            color: #7c3aed;
+        }
+        
+        .education-details {
+            font-size: 9pt;
+            color: #6b46c1;
+            margin-top: 2pt;
+        }
+        
+        /* Skills - Detailed breakdown */
+        .skills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14pt;
+        }
+        
+        .skill-category {
+            flex: 1;
+            min-width: 120pt;
+        }
+        
+        .skill-category-title {
+            font-weight: 600;
+            font-size: 10pt;
+            color: #581c87;
+            margin-bottom: 4pt;
+        }
+        
+        .skill-list {
+            font-size: 9pt;
+            color: #6b46c1;
+            line-height: 1.3;
+        }
+        
+        /* Certifications */
+        .cert-item {
+            margin-bottom: 8pt;
+        }
+        
+        .cert-name {
+            font-weight: 600;
+            font-size: 10pt;
+            color: #581c87;
+        }
+        
+        .cert-details {
+            font-size: 9pt;
+            color: #6b46c1;
+        }
+        
+        /* Print optimizations */
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .section {
+                page-break-inside: avoid;
+            }
+            
+            .experience-item {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1 class="name">{{ personal.name }}</h1>
+        <div class="contact-info">
+            <div class="contact-item">
+                <span>{{ personal.email }}</span>
+            </div>
+            <div class="contact-item">
+                <span>{{ personal.phone }}</span>
+            </div>
+            <div class="contact-item">
+                <span>{{ personal.location }}</span>
+            </div>
+            {% if personal.website %}
+            <div class="contact-item">
+                <span>{{ personal.website }}</span>
+            </div>
+            {% endif %}
+            {% if personal.linkedin %}
+            <div class="contact-item">
+                <span>{{ personal.linkedin }}</span>
+            </div>
+            {% endif %}
+            {% if personal.github %}
+            <div class="contact-item">
+                <span>{{ personal.github }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Professional Summary - Strong and detailed -->
+    {% if professional_summary %}
+    <div class="section">
+        <h2 class="section-title">Professional Summary</h2>
+        <div class="summary">{{ professional_summary }}</div>
+    </div>
+    {% endif %}
+
+    <!-- Core Skills - Prominent at top -->
+    {% if skills %}
+    <div class="section">
+        <h2 class="section-title">Core Skills & Expertise</h2>
+        <div class="core-skills-container">
+            {% if skills.technical %}
+            <div class="core-skill-category">
+                <div class="core-skill-title">Technical Skills</div>
+                <div class="core-skill-list">{{ skills.technical | join(', ') }}</div>
+            </div>
+            {% endif %}
+            {% if skills.soft %}
+            <div class="core-skill-category">
+                <div class="core-skill-title">Professional Skills</div>
+                <div class="core-skill-list">{{ skills.soft | join(', ') }}</div>
+            </div>
+            {% endif %}
+            {% if skills.languages %}
+            <div class="core-skill-category">
+                <div class="core-skill-title">Languages</div>
+                <div class="core-skill-list">{{ skills.languages | join(', ') }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Professional Experience - Balanced with skills -->
+    {% if experience %}
+    <div class="section">
+        <h2 class="section-title">Professional Experience</h2>
+        {% for job in experience %}
+        <div class="experience-item">
+            <div class="job-header">
+                <div>
+                    <div class="job-title">{{ job.role }}</div>
+                    <div class="company">{{ job.company }}</div>
+                </div>
+                <div class="job-dates">
+                    {% if job.startDateValue and job.endDateValue %}
+                        {% if job.startDateValue.isPresent %}
+                            {{ job.startDateValue.year }} - Present
+                        {% elif job.endDateValue.isPresent %}
+                            {% if job.startDateValue.month %}{{ job.startDateValue.month|month_name }} {{ job.startDateValue.year }}{% else %}{{ job.startDateValue.year }}{% endif %} - Present
+                        {% else %}
+                            {% if job.startDateValue.month %}{{ job.startDateValue.month|month_name }} {{ job.startDateValue.year }}{% else %}{{ job.startDateValue.year }}{% endif %} - {% if job.endDateValue.month %}{{ job.endDateValue.month|month_name }} {{ job.endDateValue.year }}{% else %}{{ job.endDateValue.year }}{% endif %}
+                        {% endif %}
+                    {% else %}
+                        {{ job.startDate }} - {{ job.endDate }}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="job-location">{{ job.location }}</div>
+            {% if job.description %}
+            <div class="job-description">{{ job.description }}</div>
+            {% endif %}
+            {% if job.achievements %}
+            <ul class="achievements">
+                {% for achievement in job.achievements %}
+                <li>{{ achievement }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Education -->
+    {% if education %}
+    <div class="section">
+        <h2 class="section-title">Education</h2>
+        {% for edu in education %}
+        <div class="education-item">
+            <div class="degree">{{ edu.degree }}</div>
+            <div class="institution">{{ edu.institution }}</div>
+            <div class="education-details">
+                {{ edu.field }} • 
+                {% if edu.startDateValue and edu.endDateValue %}
+                    {% if edu.startDateValue.isPresent %}
+                        {{ edu.startDateValue.year }} - Present
+                    {% elif edu.endDateValue.isPresent %}
+                        {% if edu.startDateValue.month %}{{ edu.startDateValue.month|month_name }} {{ edu.startDateValue.year }}{% else %}{{ edu.startDateValue.year }}{% endif %} - Present
+                    {% else %}
+                        {% if edu.startDateValue.month %}{{ edu.startDateValue.month|month_name }} {{ edu.startDateValue.year }}{% else %}{{ edu.startDateValue.year }}{% endif %} - {% if edu.endDateValue.month %}{{ edu.endDateValue.month|month_name }} {{ edu.endDateValue.year }}{% else %}{{ edu.endDateValue.year }}{% endif %}
+                    {% endif %}
+                {% else %}
+                    {{ edu.startDate }} - {{ edu.endDate }}
+                {% endif %}
+                {% if edu.gpa %} • GPA: {{ edu.gpa }}{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Projects - Balanced prominence -->
+    {% if projects %}
+    <div class="section">
+        <h2 class="section-title">Key Projects</h2>
+        {% for project in projects %}
+        <div class="project-item">
+            <div class="project-name">{{ project.name }}</div>
+            {% if project.tech_stack %}
+            <div class="project-tech">Tech Stack: {{ project.tech_stack | join(', ') }}</div>
+            {% endif %}
+            {% if project.startDate or project.endDate %}
+            <div class="project-tech">
+                {% if project.startDate and project.endDate %}
+                    {% if project.startDateValue and project.endDateValue %}
+                        {% if project.startDateValue.isPresent %}
+                            {{ project.startDateValue.year }} - Present
+                        {% elif project.endDateValue.isPresent %}
+                            {% if project.startDateValue.month %}{{ project.startDateValue.month|month_name }} {{ project.startDateValue.year }}{% else %}{{ project.startDateValue.year }}{% endif %} - Present
+                        {% else %}
+                            {% if project.startDateValue.month %}{{ project.startDateValue.month|month_name }} {{ project.startDateValue.year }}{% else %}{{ project.startDateValue.year }}{% endif %} - {% if project.endDateValue.month %}{{ project.endDateValue.month|month_name }} {{ project.endDateValue.year }}{% else %}{{ project.endDateValue.year }}{% endif %}
+                        {% endif %}
+                    {% else %}
+                        {{ project.startDate }} - {{ project.endDate }}
+                    {% endif %}
+                {% elif project.startDate %}
+                    Started: {% if project.startDateValue %}{% if project.startDateValue.month %}{{ project.startDateValue.month|month_name }} {{ project.startDateValue.year }}{% else %}{{ project.startDateValue.year }}{% endif %}{% else %}{{ project.startDate }}{% endif %}
+                {% elif project.endDate %}
+                    Completed: {% if project.endDateValue %}{% if project.endDateValue.month %}{{ project.endDateValue.month|month_name }} {{ project.endDateValue.year }}{% else %}{{ project.endDateValue.year }}{% endif %}{% else %}{{ project.endDate }}{% endif %}
+                {% endif %}
+            </div>
+            {% endif %}
+            <div class="project-description">{{ project.description }}</div>
+            {% if project.link %}
+            <div class="project-tech">Link: {{ project.link }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Skills - Detailed breakdown -->
+    {% if skills %}
+    <div class="section">
+        <h2 class="section-title">Skills & Expertise</h2>
+        <div class="skills-container">
+            {% if skills.technical %}
+            <div class="skill-category">
+                <div class="skill-category-title">Technical</div>
+                <div class="skill-list">{{ skills.technical | join(', ') }}</div>
+            </div>
+            {% endif %}
+            {% if skills.soft %}
+            <div class="skill-category">
+                <div class="skill-category-title">Soft Skills</div>
+                <div class="skill-list">{{ skills.soft | join(', ') }}</div>
+            </div>
+            {% endif %}
+            {% if skills.languages %}
+            <div class="skill-category">
+                <div class="skill-category-title">Languages</div>
+                <div class="skill-list">{{ skills.languages | join(', ') }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Certifications -->
+    {% if licenses_certifications %}
+    <div class="section">
+        <h2 class="section-title">Licenses & Certifications</h2>
+        {% for cert in licenses_certifications %}
+        <div class="cert-item">
+            <div class="cert-name">{{ cert.name }}</div>
+            <div class="cert-details">
+                {{ cert.issuer }}
+                {% if cert.date %} • {% if cert.dateValue %}{% if cert.dateValue.month %}{{ cert.dateValue.month|month_name }} {{ cert.dateValue.year }}{% else %}{{ cert.dateValue.year }}{% endif %}{% else %}{{ cert.date }}{% endif %}{% endif %}
+                {% if cert.expiry %} • Expires: {% if cert.expiryValue %}{% if cert.expiryValue.month %}{{ cert.expiryValue.month|month_name }} {{ cert.expiryValue.year }}{% else %}{{ cert.expiryValue.year }}{% endif %}{% else %}{{ cert.expiry }}{% endif %}{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</body>
+</html>

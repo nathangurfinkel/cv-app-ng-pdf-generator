@@ -1,0 +1,29 @@
+# Core FastAPI and web framework dependencies
+fastapi
+uvicorn[standard]
+
+# Playwright for PDF generation
+playwright
+
+# Environment and configuration
+python-dotenv
+
+# Pydantic for data validation
+pydantic
+
+# CORS middleware
+python-multipart
+
+# HTTP client for async requests
+httpx
+
+# PDF generation and templating (fallback)
+jinja2
+weasyprint
+
+# Security and rate limiting
+slowapi
+python-magic
+
+# Additional utilities
+requests

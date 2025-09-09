@@ -1,0 +1,8 @@
+# Testing dependencies
+pytest
+pytest-asyncio
+pytest-mock
+pytest-cov
+httpx
+fastapi[test]
+playwright
