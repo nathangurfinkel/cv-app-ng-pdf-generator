@@ -91,7 +91,7 @@ aws ecs create-service \
   --task-definition $TASK_DEFINITION_FAMILY \
   --desired-count 1 \
   --launch-type FARGATE \
-  --network-configuration "awsvpcConfiguration={subnets=[subnet-12345],securityGroups=[sg-12345],assignPublicIp=ENABLED}" \
+  --network-configuration "awsvpcConfiguration={subnets=[subnet-0b3aaa0693ccc03da],securityGroups=[sg-0887a25ef5d0008ad],assignPublicIp=ENABLED}" \
   --region $REGION
 
 echo "✅ PDF Service deployed successfully!"
