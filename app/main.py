@@ -76,7 +76,7 @@ def create_app() -> FastAPI:
             body = await request.json()
             cv_data = body.get("cv_data", {})
             template = body.get("template", "classic")
-            frontend_url = body.get("frontend_url", "http://localhost:5173")
+            frontend_url = body.get("frontend_url", os.getenv("FRONTEND_URL", "http://localhost:5173"))
             
             print_step("PDF Generation Request", {
                 "template": template,

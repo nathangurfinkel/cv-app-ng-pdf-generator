@@ -1,8 +1,8 @@
 # PDF Generation Service Dockerfile for AWS Fargate
 # This container includes Playwright with Chromium for PDF generation
 
-# Use Python 3.11 slim image as base
-FROM python:3.11-slim
+# Use Playwright Python image that already has Chromium
+FROM mcr.microsoft.com/playwright/python:v1.40.0-jammy
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
@@ -47,8 +47,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Install Playwright and Chromium
-RUN playwright install chromium
+# Install Playwright and Chromium with dependencies
+RUN playwright install chromium && \
+    playwright install-deps chromium
 
 # Copy application code
 COPY . .
