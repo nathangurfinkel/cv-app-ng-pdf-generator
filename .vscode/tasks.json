@@ -1,0 +1,62 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "pdf: pip install (requirements.txt)",
+      "type": "shell",
+      "command": "python3 -m pip install -r requirements.txt",
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "pdf: playwright install chromium",
+      "type": "shell",
+      "command": "python3 -m playwright install chromium",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "pdf: run local (uvicorn)",
+      "type": "shell",
+      "command": "python3 -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "pdf: docker build",
+      "type": "shell",
+      "command": "docker build -t cv-pdf-service:latest .",
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "pdf: docker run (port 8000)",
+      "type": "shell",
+      "command": "docker run --rm -p 8000:8000 -e FRONTEND_URL=http://localhost:5173 cv-pdf-service:latest",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "pdf: deploy (ECS/Fargate)",
+      "type": "shell",
+      "command": "bash ./deploy.sh",
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "pdf: setup ALB (stable endpoint)",
+      "type": "shell",
+      "command": "bash ./setup-alb.sh",
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "build",
+      "problemMatcher": []
+    }
+  ]
+}
+
+

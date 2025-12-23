@@ -152,7 +152,8 @@ infrastructure.local.json
 docker-compose.override.yml
 
 # IDE
-.vscode/
+.vscode/*
+!.vscode/tasks.json
 .idea/
 *.swp
 *.swo
