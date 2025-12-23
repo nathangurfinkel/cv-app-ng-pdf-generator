@@ -4,15 +4,16 @@
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "512",
   "memory": "1024",
-  "executionRoleArn": "arn:aws:iam::303774815769:role/ecsTaskExecutionRole",
-  "taskRoleArn": "arn:aws:iam::303774815769:role/ecsTaskRole",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskRole",
   "containerDefinitions": [
     {
       "name": "cv-pdf-service",
-      "image": "303774815769.dkr.ecr.eu-north-1.amazonaws.com/cv-pdf-service:latest",
+      "image": "ACCOUNT_ID.dkr.ecr.eu-north-1.amazonaws.com/cv-pdf-service:latest",
       "portMappings": [
         {
           "containerPort": 8000,
+          "hostPort": 8000,
           "protocol": "tcp"
         }
       ],
@@ -24,13 +25,8 @@
           "awslogs-region": "eu-north-1",
           "awslogs-stream-prefix": "ecs"
         }
-      },
-      "environment": [
-        {
-          "name": "FRONTEND_URL",
-          "value": "https://your-amplify-app.com"
-        }
-      ]
+      }
     }
   ]
 }
+

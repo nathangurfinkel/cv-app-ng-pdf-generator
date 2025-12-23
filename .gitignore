@@ -134,11 +134,18 @@ cython_debug/
 # AWS
 .aws/
 aws-exports.js
+*.pem
+aws-credentials.json
 
 # Lambda deployment packages
 *.zip
 deployment-package/
 layer-package/
+
+# Local infrastructure tracking (never commit)
+.local-infrastructure.env
+infrastructure-secrets.json
+infrastructure.local.json
 
 # Docker
 .dockerignore
