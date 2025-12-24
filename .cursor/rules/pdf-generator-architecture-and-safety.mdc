@@ -1,0 +1,45 @@
+---
+description: PDF Generator service architecture + security constraints (Playwright rendering, SSRF defenses, stable API contract).
+globs: "**/*"
+alwaysApply: true
+---
+# PDF Generator: architecture & safety rules
+
+## What this service is
+
+- **Role**: generate pixel-perfect CV PDFs for the frontend.
+- **Runtime**: FastAPI on **AWS Fargate** (not Lambda).
+- **Rendering**: currently uses **Playwright** to render the frontend’s print route and export to PDF.
+
+## Codebase boundaries (keep SRP)
+
+- **API surface**: prefer defining endpoints in `app/routes/*` and wiring routers in `app/main.py` (avoid duplicating endpoints in multiple places).
+- **Business logic**: keep PDF generation orchestration inside `app/services/*`.
+- **Shared helpers**: keep sanitization/validation in `app/utils/*` (e.g., `app/utils/security.py`).
+
+## Stable API contract (frontend depends on this)
+
+- **GET** `/pdf/templates` → `{ templates: string[] }`
+- **POST** `/pdf/generate` → returns `application/pdf`
+  - Expected payload (current frontend behavior): `{ cv_data, template, frontend_url }`
+
+If you change request/response shapes, you must update the consumer in `cv-app-ng-frontend/src/services/api.ts`.
+
+## Security + privacy constraints (non-negotiable)
+
+- **SSRF defense**: never trust a client-provided `frontend_url`.
+  - Prefer **deriving the frontend origin from config** (env / allowlist) and ignoring request-provided URLs.
+  - If accepting `frontend_url`, validate:
+    - scheme is `https` (or `http` only for local dev)
+    - host is in an explicit allowlist (e.g., `settings.ALL_CORS_ORIGINS`)
+    - block `file:`, `data:`, `ftp:` and private-network targets
+- **Template allowlist**: treat `template` as an allowlisted identifier; do not build file paths from untrusted input without validation.
+- **PII**: never log raw `cv_data` or rendered HTML. Log only counts/sizes and request ids.
+
+## Playwright reliability constraints
+
+- **Resource cleanup**: browsers/pages must be closed in `finally` blocks.
+- **Timeouts**: set navigation/render timeouts and fail gracefully.
+- **Network hardening**: prefer blocking third-party requests during rendering (only allow the frontend origin).
+- **Concurrency**: avoid unbounded parallel Playwright launches; enforce limits if adding background processing.
+

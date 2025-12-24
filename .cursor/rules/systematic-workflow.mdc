@@ -1,0 +1,31 @@
+---
+description: Systematic workflow for high-quality changes (plan → implement → verify) with SOLID guardrails.
+globs: "**/*"
+alwaysApply: true
+---
+# Systematic workflow (SOLID + quality bar)
+
+## Before changing code
+
+- **Clarify the goal**: restate what “done” means and what must NOT change (API contracts, templates, infra).
+- **Plan with SOLID in mind**:
+  - Single Responsibility: avoid “god” services/files.
+  - Dependency Inversion: depend on small interfaces (e.g., storage/renderer abstractions), not concrete libraries.
+- **Search first**: extend existing patterns before adding new ones.
+- **Cross-repo awareness**: if you change an API contract, update the consumer repo(s) in the same PR/plan.
+
+## While implementing
+
+- **Keep boundaries clean**:
+  - Routes/controllers: request/response validation + orchestration only.
+  - Services: business logic.
+  - Utils: pure helpers.
+- **Be explicit about security**: validate external inputs; never trust URLs, file paths, or HTML.
+- **Avoid new dependencies** unless there’s clear ROI and no simpler option.
+
+## Done criteria
+
+- **No PII/secrets in logs** (log sizes/ids, not raw CV content).
+- **Basic checks pass** (type/lint/tests available in the repo).
+- **Docs updated** when behavior/config/contracts change (README/env examples).
+
