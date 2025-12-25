@@ -32,6 +32,18 @@ class Settings:
     # Combine development and production origins
     ALL_CORS_ORIGINS: List[str] = CORS_ORIGINS + [origin.strip() for origin in PRODUCTION_CORS_ORIGINS if origin.strip()]
     
+    # Frontend URL allowlist for SSRF protection (PDF generation)
+    FRONTEND_ORIGINS: List[str] = [
+        "http://localhost:5173",  # Development only
+        "http://127.0.0.1:5173",  # Development only
+    ]
+    
+    # Add production frontend origins from environment
+    PRODUCTION_FRONTEND_ORIGINS: List[str] = os.getenv("FRONTEND_ORIGINS", "").split(",") if os.getenv("FRONTEND_ORIGINS") else []
+    
+    # Combine development and production frontend origins
+    ALLOWED_FRONTEND_ORIGINS: List[str] = FRONTEND_ORIGINS + [origin.strip() for origin in PRODUCTION_FRONTEND_ORIGINS if origin.strip()]
+    
     # OpenAI Configuration
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     OPENAI_BASE_URL: str = "https://api.openai.com/v1"

@@ -1,221 +1,93 @@
 """
-Security utilities for the CV Builder application.
-"""
-import magic
-import re
-from pathlib import Path
-from typing import Optional
-from fastapi import HTTPException
-from ..utils.debug import print_step
+Security utilities for the PDF Generator service.
 
-def validate_file_content(file_content: bytes, expected_type: str) -> bool:
+Provides URL validation to prevent SSRF attacks.
+"""
+
+import ipaddress
+from typing import List
+from urllib.parse import urlparse
+from fastapi import HTTPException
+
+
+def is_private_ip(host: str) -> bool:
     """
-    Validate file content matches expected MIME type.
+    Check if a host is a private/internal IP address.
     
     Args:
-        file_content: File content as bytes
-        expected_type: Expected MIME type
+        host: Hostname or IP address
         
     Returns:
-        True if file content matches expected type
+        True if host is a private IP, False otherwise
     """
     try:
-        mime_type = magic.from_buffer(file_content, mime=True)
-        print_step("File Content Validation", {
-            "expected_type": expected_type,
-            "detected_type": mime_type,
-            "file_size": len(file_content)
-        }, "input")
-        
-        is_valid = mime_type == expected_type
-        print_step("File Content Validation", {
-            "is_valid": is_valid,
-            "mime_type": mime_type
-        }, "output")
-        
-        return is_valid
-    except Exception as e:
-        print_step("File Content Validation Error", {"error": str(e)}, "error")
+        # Try to parse as IP address
+        ip = ipaddress.ip_address(host)
+        # Check if it's in private ranges
+        return ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved
+    except ValueError:
+        # Not an IP address, assume it's a hostname (public)
+        # We'll validate against allowlist instead
         return False
 
-def sanitize_filename(filename: str) -> str:
-    """
-    Sanitize filename to prevent path traversal attacks.
-    
-    Args:
-        filename: Original filename
-        
-    Returns:
-        Sanitized filename
-    """
-    # Remove path components and keep only the filename
-    sanitized = Path(filename).name
-    
-    # Remove any remaining dangerous characters
-    sanitized = re.sub(r'[^\w\-_\.]', '_', sanitized)
-    
-    # Limit filename length
-    if len(sanitized) > 255:
-        name, ext = Path(sanitized).stem, Path(sanitized).suffix
-        sanitized = name[:255-len(ext)] + ext
-    
-    return sanitized
 
-def validate_file_size(file_content: bytes, max_size: int) -> bool:
+def validate_frontend_url(url: str, allowed_origins: List[str]) -> str:
     """
-    Validate file size is within limits.
+    Validate frontend URL against allowlist to prevent SSRF attacks.
     
     Args:
-        file_content: File content as bytes
-        max_size: Maximum allowed size in bytes
+        url: The frontend URL to validate
+        allowed_origins: List of allowed origin strings (e.g., ["http://localhost:5173"])
         
     Returns:
-        True if file size is within limits
-    """
-    file_size = len(file_content)
-    is_valid = file_size <= max_size
-    
-    print_step("File Size Validation", {
-        "file_size": file_size,
-        "max_size": max_size,
-        "is_valid": is_valid
-    }, "input" if is_valid else "error")
-    
-    return is_valid
-
-def validate_uploaded_file(file_content: bytes, filename: str, allowed_types: list, max_size: int) -> dict:
-    """
-    Comprehensive file validation for uploads.
-    
-    Args:
-        file_content: File content as bytes
-        filename: Original filename
-        allowed_types: List of allowed MIME types
-        max_size: Maximum file size in bytes
-        
-    Returns:
-        Validation result dictionary
+        Validated origin string (scheme + host + port, no path/query)
         
     Raises:
-        HTTPException: If validation fails
+        HTTPException: If URL is invalid or not in allowlist
     """
-    print_step("File Upload Validation", {
-        "filename": filename,
-        "file_size": len(file_content),
-        "allowed_types": allowed_types
-    }, "input")
+    if not url:
+        raise HTTPException(status_code=400, detail="frontend_url is required")
     
-    # Validate file size
-    if not validate_file_size(file_content, max_size):
-        raise HTTPException(
-            status_code=413,
-            detail=f"File too large. Maximum size: {max_size} bytes"
-        )
+    try:
+        parsed = urlparse(url)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid frontend_url format: {str(e)}")
     
-    # Validate file content
-    mime_type = magic.from_buffer(file_content, mime=True)
-    if mime_type not in allowed_types:
+    # Validate scheme: must be http or https
+    if parsed.scheme not in ("http", "https"):
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid file type: {mime_type}. Allowed types: {allowed_types}"
+            detail=f"Invalid scheme: {parsed.scheme}. Only http and https are allowed."
         )
     
-    # Sanitize filename
-    sanitized_filename = sanitize_filename(filename)
+    # Validate host: must not be empty
+    if not parsed.hostname:
+        raise HTTPException(status_code=400, detail="Invalid frontend_url: missing hostname")
     
-    result = {
-        "original_filename": filename,
-        "sanitized_filename": sanitized_filename,
-        "mime_type": mime_type,
-        "file_size": len(file_content),
-        "is_valid": True
-    }
+    # Block private IP addresses (SSRF protection)
+    if is_private_ip(parsed.hostname):
+        # Allow localhost only if explicitly in allowlist
+        if parsed.hostname not in ("localhost", "127.0.0.1"):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Private IP addresses are not allowed: {parsed.hostname}"
+            )
     
-    print_step("File Upload Validation", result, "output")
-    return result
-
-def sanitize_user_input(text: str, max_length: int = 10000) -> str:
-    """
-    Sanitize user input to prevent XSS and injection attacks.
+    # Construct origin (scheme + hostname + port)
+    port = parsed.port
+    if port is None:
+        port = 443 if parsed.scheme == "https" else 80
     
-    Args:
-        text: User input text
-        max_length: Maximum allowed length
-        
-    Returns:
-        Sanitized text
-    """
-    if not text:
-        return ""
+    origin = f"{parsed.scheme}://{parsed.hostname}"
+    if (parsed.scheme == "http" and port != 80) or (parsed.scheme == "https" and port != 443):
+        origin = f"{origin}:{port}"
     
-    # Limit length
-    if len(text) > max_length:
-        text = text[:max_length]
-    
-    # Remove potentially dangerous characters
-    # This is a basic sanitization - consider using a proper HTML sanitizer
-    text = re.sub(r'<script[^>]*>.*?</script>', '', text, flags=re.IGNORECASE | re.DOTALL)
-    text = re.sub(r'javascript:', '', text, flags=re.IGNORECASE)
-    text = re.sub(r'on\w+\s*=', '', text, flags=re.IGNORECASE)
-    
-    return text.strip()
-
-def validate_job_description(job_description: str) -> str:
-    """
-    Validate and sanitize job description input.
-    
-    Args:
-        job_description: Job description text
-        
-    Returns:
-        Validated and sanitized job description
-        
-    Raises:
-        HTTPException: If validation fails
-    """
-    if not job_description or not job_description.strip():
+    # Validate against allowlist
+    if origin not in allowed_origins:
         raise HTTPException(
             status_code=400,
-            detail="Job description is required"
+            detail=f"frontend_url origin '{origin}' is not in the allowed list. "
+                   f"Allowed origins: {', '.join(allowed_origins)}"
         )
     
-    # Sanitize input
-    sanitized = sanitize_user_input(job_description, max_length=50000)
-    
-    if len(sanitized) < 10:
-        raise HTTPException(
-            status_code=400,
-            detail="Job description must be at least 10 characters long"
-        )
-    
-    return sanitized
-
-def validate_cv_text(cv_text: str) -> str:
-    """
-    Validate and sanitize CV text input.
-    
-    Args:
-        cv_text: CV text content
-        
-    Returns:
-        Validated and sanitized CV text
-        
-    Raises:
-        HTTPException: If validation fails
-    """
-    if not cv_text or not cv_text.strip():
-        raise HTTPException(
-            status_code=400,
-            detail="CV text is required"
-        )
-    
-    # Sanitize input
-    sanitized = sanitize_user_input(cv_text, max_length=100000)
-    
-    if len(sanitized) < 50:
-        raise HTTPException(
-            status_code=400,
-            detail="CV text must be at least 50 characters long"
-        )
-    
-    return sanitized
+    return origin

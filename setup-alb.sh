@@ -5,7 +5,7 @@
 
 set -e
 
-echo "🔧 Setting up Application Load Balancer for PDF Service..."
+echo "Setting up Application Load Balancer for PDF Service..."
 
 REGION="eu-north-1"
 CLUSTER_NAME="cv-builder-cluster"
@@ -16,11 +16,11 @@ SUBNET_2="subnet-0db149ba7ff207df7"  # eu-north-1b
 SUBNET_3="subnet-0fed3a782a43d38e5"  # eu-north-1c
 SECURITY_GROUP="sg-0887a25ef5d0008ad"
 
-echo "✅ VPC: $VPC_ID"
-echo "✅ Subnets: $SUBNET_1, $SUBNET_2, $SUBNET_3"
+echo "VPC: $VPC_ID"
+echo "Subnets: $SUBNET_1, $SUBNET_2, $SUBNET_3"
 
 # Create security group for ALB if it doesn't exist
-echo "🔒 Creating/checking ALB security group..."
+echo "Creating/checking ALB security group..."
 ALB_SG_ID=$(aws ec2 describe-security-groups \
   --filters "Name=group-name,Values=cv-pdf-alb-sg" "Name=vpc-id,Values=$VPC_ID" \
   --region $REGION \
@@ -45,13 +45,13 @@ if [ "$ALB_SG_ID" = "None" ] || [ -z "$ALB_SG_ID" ]; then
     --cidr 0.0.0.0/0 \
     --region $REGION
   
-  echo "✅ Created ALB security group: $ALB_SG_ID"
+  echo "Created ALB security group: $ALB_SG_ID"
 else
-  echo "✅ Using existing ALB security group: $ALB_SG_ID"
+  echo "Using existing ALB security group: $ALB_SG_ID"
 fi
 
 # Update ECS task security group to allow traffic from ALB
-echo "🔒 Updating ECS security group to allow ALB traffic..."
+echo "Updating ECS security group to allow ALB traffic..."
 aws ec2 authorize-security-group-ingress \
   --group-id $SECURITY_GROUP \
   --protocol tcp \
@@ -60,7 +60,7 @@ aws ec2 authorize-security-group-ingress \
   --region $REGION 2>/dev/null || echo "Rule may already exist"
 
 # Create target group
-echo "📊 Creating target group..."
+echo "Creating target group..."
 TARGET_GROUP_ARN=$(aws elbv2 describe-target-groups \
   --names cv-pdf-tg \
   --region $REGION \
@@ -84,13 +84,13 @@ if [ "$TARGET_GROUP_ARN" = "None" ] || [ -z "$TARGET_GROUP_ARN" ]; then
     --region $REGION \
     --query 'TargetGroups[0].TargetGroupArn' \
     --output text)
-  echo "✅ Created Target Group: $TARGET_GROUP_ARN"
+  echo "Created Target Group: $TARGET_GROUP_ARN"
 else
-  echo "✅ Using existing Target Group: $TARGET_GROUP_ARN"
+  echo "Using existing Target Group: $TARGET_GROUP_ARN"
 fi
 
 # Create Application Load Balancer
-echo "⚖️ Creating Application Load Balancer..."
+echo "Creating Application Load Balancer..."
 ALB_ARN=$(aws elbv2 describe-load-balancers \
   --names cv-pdf-alb \
   --region $REGION \
@@ -108,11 +108,11 @@ if [ "$ALB_ARN" = "None" ] || [ -z "$ALB_ARN" ]; then
     --region $REGION \
     --query 'LoadBalancers[0].LoadBalancerArn' \
     --output text)
-  echo "✅ Created ALB: $ALB_ARN"
-  echo "⏳ Waiting for ALB to be active..."
+  echo "Created ALB: $ALB_ARN"
+  echo "Waiting for ALB to be active..."
   sleep 10
 else
-  echo "✅ Using existing ALB: $ALB_ARN"
+  echo "Using existing ALB: $ALB_ARN"
 fi
 
 # Get ALB DNS name
@@ -122,10 +122,10 @@ ALB_DNS=$(aws elbv2 describe-load-balancers \
   --query 'LoadBalancers[0].DNSName' \
   --output text)
 
-echo "✅ ALB DNS: $ALB_DNS"
+echo "ALB DNS: $ALB_DNS"
 
 # Create listener
-echo "👂 Creating listener..."
+echo "Creating listener..."
 LISTENER_ARN=$(aws elbv2 describe-listeners \
   --load-balancer-arn $ALB_ARN \
   --region $REGION \
@@ -141,14 +141,14 @@ if [ "$LISTENER_ARN" = "None" ] || [ -z "$LISTENER_ARN" ]; then
     --region $REGION \
     --query 'Listeners[0].ListenerArn' \
     --output text)
-  echo "✅ Created Listener: $LISTENER_ARN"
+  echo "Created Listener: $LISTENER_ARN"
 else
-  echo "✅ Using existing Listener: $LISTENER_ARN"
+  echo "Using existing Listener: $LISTENER_ARN"
 fi
 
 # Delete the old service and recreate with load balancer
-echo "🔄 Updating ECS service to use load balancer..."
-echo "⚠️  This will recreate the service with load balancer configuration..."
+echo "Updating ECS service to use load balancer..."
+echo "WARNING: This will recreate the service with load balancer configuration..."
 
 # Update service to 0 desired count first
 aws ecs update-service \
@@ -157,7 +157,7 @@ aws ecs update-service \
   --desired-count 0 \
   --region $REGION
 
-echo "⏳ Waiting for tasks to stop..."
+echo "Waiting for tasks to stop..."
 sleep 10
 
 # Delete the service
@@ -167,11 +167,11 @@ aws ecs delete-service \
   --force \
   --region $REGION
 
-echo "⏳ Waiting for service deletion..."
+echo "Waiting for service deletion..."
 sleep 15
 
 # Recreate service with load balancer
-echo "🆕 Creating new service with load balancer..."
+echo "Creating new service with load balancer..."
 aws ecs create-service \
   --cluster $CLUSTER_NAME \
   --service-name $SERVICE_NAME \
@@ -185,14 +185,14 @@ aws ecs create-service \
 
 echo ""
 echo "=========================================="
-echo "✅ LOAD BALANCER SETUP COMPLETE!"
+echo "LOAD BALANCER SETUP COMPLETE!"
 echo "=========================================="
-echo "📋 Summary:"
+echo "Summary:"
 echo "   • ALB DNS: http://$ALB_DNS"
 echo "   • Target Group: $TARGET_GROUP_ARN"
 echo "   • Health Check: /health"
 echo ""
-echo "🔄 Next Steps:"
+echo "Next Steps:"
 echo "   1. Wait 2-3 minutes for service to be healthy"
 echo "   2. Test: curl http://$ALB_DNS/health"
 echo "   3. Update frontend: VITE_PDF_SERVICE_URL=http://$ALB_DNS"

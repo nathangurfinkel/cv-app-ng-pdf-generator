@@ -85,7 +85,17 @@ class CVData(BaseModel):
     licenses_certifications: List[LicenseCertification] = []
 
 class PDFRequest(BaseModel):
-    """PDF generation request model."""
+    """
+    PDF generation request model.
+    
+    DEPRECATED: This model is not used by the actual PDF generation endpoint.
+    The endpoint in app/main.py uses raw request body parsing with:
+    - cv_data: Dict[str, Any] (CV data)
+    - template: str (template name)
+    - frontend_url: str (frontend origin for SSRF protection)
+    
+    This model is kept for reference but should not be used.
+    """
     templateId: str
     data: CVData
 

@@ -12,6 +12,8 @@ import uuid
 import os
 from .core.config import settings
 from .utils.debug import print_step
+from .utils.security import validate_frontend_url
+from .routes.og_routes import router as og_router
 
 def create_app() -> FastAPI:
     """
@@ -38,6 +40,9 @@ def create_app() -> FastAPI:
         allow_headers=["Content-Type", "Authorization"],
     )
     print_step("FastAPI App Initialization", "FastAPI app and CORS middleware configured", "output")
+    
+    # Include routers
+    app.include_router(og_router, prefix="/pdf")
     
     # Health check endpoint
     @app.get("/")
@@ -71,25 +76,40 @@ def create_app() -> FastAPI:
         """
         Generate a PDF from CV data using Playwright for pixel-perfect rendering.
         """
+        # Parse the request body first (before validation)
         try:
-            # Parse the request body
             body = await request.json()
-            cv_data = body.get("cv_data", {})
-            template = body.get("template", "classic")
-            frontend_url = body.get("frontend_url", os.getenv("FRONTEND_URL", "http://localhost:5173"))
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Invalid JSON in request body: {str(e)}")
+        
+        cv_data = body.get("cv_data", {})
+        template = body.get("template", "classic")
+        frontend_url_raw = body.get("frontend_url", os.getenv("FRONTEND_URL", "http://localhost:5173"))
+        
+        # Validate frontend_url against allowlist (SSRF protection) - BEFORE any Playwright operations
+        # This must happen early to prevent SSRF attacks
+        try:
+            validated_origin = validate_frontend_url(frontend_url_raw, settings.ALLOWED_FRONTEND_ORIGINS)
+        except HTTPException:
+            # Re-raise HTTPException from validation (400 status)
+            raise
+        except Exception as e:
+            # Unexpected error during validation
+            raise HTTPException(status_code=400, detail=f"Frontend URL validation failed: {str(e)}")
+        
+        try:
             
             print_step("PDF Generation Request", {
                 "template": template,
-                "frontend_url": frontend_url,
+                "frontend_origin": validated_origin,  # Log only origin, not full URL
                 "cv_data_keys": list(cv_data.keys()) if cv_data else []
             }, "input")
             
             # Generate a unique ID for this PDF generation
             unique_id = str(uuid.uuid4())
             
-            # For now, we'll use a simple approach where we pass the data directly
-            # In production, you might want to store this in a database temporarily
-            print_url = f"{frontend_url}/print/{unique_id}"
+            # Use validated origin to construct print URL
+            print_url = f"{validated_origin}/print/{unique_id}"
             
             # Launch Playwright and generate PDF
             async with async_playwright() as p:
@@ -163,13 +183,13 @@ app = create_app()
 # Application startup message
 print_step("PDF Service Startup", "CV Builder PDF Service is ready to serve requests!", "output")
 print("\n" + "="*80)
-print("📄 CV BUILDER PDF SERVICE STARTED SUCCESSFULLY")
+print("CV BUILDER PDF SERVICE STARTED SUCCESSFULLY")
 print("="*80)
-print("📋 Available Endpoints:")
+print("Available Endpoints:")
 print("   • GET  /                    - Health check")
 print("   • GET  /health              - Health check")
 print("   • GET  /pdf/templates       - Get available PDF templates")
 print("   • POST /pdf/generate        - Generate PDF from CV data")
 print("="*80)
-print("🔧 Debug Mode: ENABLED - Detailed logging will be shown for each request")
+print("Debug Mode: ENABLED - Detailed logging will be shown for each request")
 print("="*80 + "\n")
